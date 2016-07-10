@@ -8,6 +8,39 @@
  * или получающихся после прохождения какого либо её слоя
  */
 class DataArray {
+public:
+  struct Size {
+    int w;
+    int h;
+    int d;
+
+    /// Конструктор по умолчанию
+    /**
+     * Задаёт нулевой размер для данных
+     */
+    Size() : w(0), h(0), d(0) {}
+
+    /// Конструктор по заданной высоте, ширине и глубине
+    /**
+     * @param w - Высота (Значение x всегда меньше высоты)
+     * @param h - Ширина (Значение y меньше ширины)
+     * @param d - Глубина (Значение z меньше глубины)
+     */
+    Size(int w, int h, int d) : w(w), h(h), d(d) {}
+
+    /// Проверка принадлежности точки массиву заданного размера
+    bool check(int x, int y, int z) const;
+
+    bool operator==(const Size & size) const;
+    bool operator!=(const Size & size) const;
+
+    /// Кол-во элементов в массиве такого размера 
+    int elemCnt() const {
+      return w * h * d;
+    }
+  };
+
+private:
   /// Массив с данными
   float * arr;
   Size size;
@@ -28,34 +61,29 @@ public:
   /// Конструктор копирования
   DataArray(const DataArray & dataArray);
 
+  /// Оператор копирования
+  /**
+   * Копирование произойдёт только в том случае,
+   * если размеры массивов совпадают.
+   * TODO : Выбросить исключение в противном случае
+   */
+  DataArray & operator=(const DataArray & other);
+
   /// Вернёт значение по индексу x, y, z
   float & at(int x, int y, int z);
 
-  class Size {
-    int w;
-    int h;
-    int d;
+  /// Вернёт значение по индексу x, y, z
+  const float & at(int x, int y, int z) const;
 
-  public:
-    /// Конструктор по умолчанию
-    /**
-     * Задаёт нулевой размер для данных
-     */
-    Size() : w(0), h(0), d(0) {}
+  /// Обнулить массив
+  void clear();
 
-    /// Конструктор по заданной высоте, ширине и глубине
-    /**
-     * @param w - Высота (Значение x всегда меньше высоты)
-     * @param h - Ширина (Значение y меньше ширины)
-     * @param d - Глубина (Значение z меньше глубины)
-     */
-    Size(int w, int h, int d) : w(w), h(h), d(d) {}
+  /// Деструктор
+  ~DataArray();
 
-    /// Проверка принадлежности точки массиву заданного размера
-    bool check(int x, int y, int z) const;
-
-    bool operator== (const Size & size) const;
-  };
+  Size getSize() const {
+    return size;
+  }
 };
 
 /**
@@ -88,12 +116,29 @@ public:
  * Класс свёрточного слоя
  */
 class ConvolutionalLayer : public Layer {
-public:
-  DataArray::Size getInputSize() const;
-  DataArray::Size getOutputSize() const;
+  DataArray::Size inputSize;
+  DataArray::Size outputSize;
 
-  void propagate(const DataArray & input, DataArray & output) const;
-  void backPropagate(const DataArray & input, DataArray & output, float lambda);
+  int depth;       /// Число фильтров в слое
+  int stride;      /// Шаг
+  int zeroPadding; /// Дополнение нулями
+  int filterSize;  /// Размер части, выбираемой фильтром
+
+  vector<DataArray> filters;
+
+public:
+  ConvolutionalLayer(DataArray::Size inputSize, ) {}
+  
+  DataArray::Size getInputSize() const {
+    return inputSize;
+  }
+
+  DataArray::Size getOutputSize() const {
+    return outputSize;
+  }
+
+  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void backPropagate(const DataArray & input, DataArray & output, float lambda);
 
   ~ConvolutionalLayer();
 };
@@ -106,8 +151,8 @@ public:
   DataArray::Size getInputSize() const;
   DataArray::Size getOutputSize() const;
 
-  void propagate(const DataArray & input, DataArray & output) const;
-  void backPropagate(const DataArray & input, DataArray & output, float lambda);
+  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void backPropagate(const DataArray & input, DataArray & output, float lambda);
 
   ~PoolLayer();
 };
