@@ -2,6 +2,12 @@
 #define SHAIL_H
 
 #include <vector>
+#include <cmath>
+#include <algorithm>
+
+float func(float x);       /// Сигмоидальная функция
+float derivative(float x); /// И её производная
+
 
 /**
  * Класс для хранения данных, подаваемых на вход сети,
@@ -62,11 +68,6 @@ public:
   DataArray(const DataArray & dataArray);
 
   /// Оператор копирования
-  /**
-   * Копирование произойдёт только в том случае,
-   * если размеры массивов совпадают.
-   * TODO : Выбросить исключение в противном случае
-   */
   DataArray & operator=(const DataArray & other);
 
   /// Вернёт значение по индексу x, y, z
@@ -78,12 +79,20 @@ public:
   /// Обнулить массив
   void clear();
 
-  /// Деструктор
-  ~DataArray();
+  /// Заполнить массив случайными значениями
+  void fillRnd(float minVal = 0, float maxVal = 1);
 
   Size getSize() const {
     return size;
   }
+
+  /// Дополнить рамкой нулей ширины width
+  void addZeros(int width, DataArray & output) const;
+
+  void removeFrame(int width, DataArray & output) const;
+
+  /// Деструктор
+  ~DataArray();
 };
 
 /**
@@ -102,7 +111,7 @@ public:
   virtual void propagate(const DataArray & input, DataArray & output) const = 0;
 
   /// Обратное распространение ошибки
-  virtual void backPropagate(const DataArray & input, DataArray & output, float lambda) = 0;
+  virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda) = 0;
 
   /// Деструктор
   /**
@@ -124,10 +133,10 @@ class ConvolutionalLayer : public Layer {
   int zeroPadding; /// Дополнение нулями
   int filterSize;  /// Размер части, выбираемой фильтром
 
-  vector<DataArray> filters;
+  std::vector< std::pair<DataArray, float> > filters; // массив весов связей и смещение
 
 public:
-  ConvolutionalLayer(DataArray::Size inputSize, ) {}
+  ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize);
   
   DataArray::Size getInputSize() const {
     return inputSize;
@@ -138,23 +147,33 @@ public:
   }
 
   virtual void propagate(const DataArray & input, DataArray & output) const;
-  virtual void backPropagate(const DataArray & input, DataArray & output, float lambda);
+  virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
 
-  ~ConvolutionalLayer();
+  ~ConvolutionalLayer() {};
 };
 
 /**
  * Класс слоя объединения
  */
-class PoolLayer : public Layer {
+class MaxPoolLayer : public Layer {
+  DataArray::Size inputSize;
+  DataArray::Size outputSize;
+  int filterSize;
+
 public:
   DataArray::Size getInputSize() const;
   DataArray::Size getOutputSize() const;
 
-  virtual void propagate(const DataArray & input, DataArray & output) const;
-  virtual void backPropagate(const DataArray & input, DataArray & output, float lambda);
+  MaxPoolLayer(DataArray::Size inputSize, int filterSize) : inputSize(inputSize), filterSize(filterSize) {
+    outputSize = inputSize;
+    outputSize.w /= filterSize;
+    outputSize.h /= filterSize;
+  }
 
-  ~PoolLayer();
+  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
+
+  ~MaxPoolLayer();
 };
 
 /**
