@@ -285,3 +285,24 @@ void MaxPoolLayer::backPropagate(const DataArray & input, const DataArray & outp
     }
   }
 }
+
+bool NeuralNetwork::addLayer(Layer * layer) {
+  if (!layers.empty() && layers.back()->getOutputSize() != layer->getInputSize())
+    return false;
+
+  layers.push_back(layer);
+  return true;
+}
+
+/// Пропустить данные через сеть
+void NeuralNetwork::propagate(const DataArray & input, DataArray & output) const {
+  // TODO почекать размеры
+}
+
+/// Произвести итерацию обучения сети
+void NeuralNetwork::backPropagate(const DataArray & input, const DataArray & expectOutput, float lambda) {
+  // propagate(); // ...
+  // Тут что то вычисляем в зависимости от используемой функции ошибки
+  // Тут 
+  // TODO почекать размеры
+}

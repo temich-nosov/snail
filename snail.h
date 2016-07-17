@@ -194,11 +194,11 @@ public:
   /// Очистить сеть
   void clear();
 
-  /// Загрузить сеть из файла
-  bool load(std::string filename);
+  // Загрузить сеть из файла
+  // bool load(std::string filename);
 
-  /// Сохранить сеть в файл
-  bool save(std::string filename);
+  // Сохранить сеть в файл
+  // bool save(std::string filename);
 
   /// Добавить слой в сеть
   bool addLayer(Layer * layer);
