@@ -13,6 +13,14 @@ float func(float x) {
   return 1.f / (1.f + exp(-x));
 }
 
+float softPlusFunction(float x) {
+  return log(1.f + exp(x));
+}
+
+float derivativeSoftPlusFunction(float x) {
+  return 1.f / (1.f + exp(-x));
+}
+
 bool DataArray::Size::check(int x, int y, int z) const {
   return (x >= 0 && x < w) && (y >= 0 && y < h) && (z >= 0 && z < d);
 }
@@ -146,11 +154,16 @@ Layer::~Layer() {}
 ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize) :
   inputSize(inputSize), depth(depth), stride(stride), zeroPadding(zeroPadding), filterSize(filterSize) {
 
-  inputSize.w += 2 * zeroPadding;
-  inputSize.h += 2 * zeroPadding;
+  realInputSize = inputSize;
 
-  int inW = inputSize.w - filterSize;
-  int inH = inputSize.h - filterSize;
+  realInputSize.w += 2 * zeroPadding;
+  realInputSize.h += 2 * zeroPadding;
+
+  realInput = DataArray(realInputSize);
+  realInputError = DataArray(realInputSize);
+
+  int inW = realInputSize.w - filterSize;
+  int inH = realInputSize.h - filterSize;
 
   if (inW < 0 || inW % stride != 0) std::cerr << "Неправильные параметры" << std::endl; // error
   if (inH < 0 || inH % stride != 0) std::cerr << "Неправильные параметры" << std::endl; // error
@@ -171,6 +184,8 @@ void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) 
     std::cerr << "Неправильные размеры входных или выходных данных" << std::endl;
     return;
   }
+  
+  input.addZeros(zeroPadding, realInput);
 
   for (int d = 0; d < depth; ++d) {
     const DataArray & filter = filters[d].first;
@@ -189,7 +204,7 @@ void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
             for (int x = xmin; x < xmax; ++x) {
-              val += input.at(x, y, z) * filter.at(x - xmin, y - ymin, z);
+              val += realInput.at(x, y, z) * filter.at(x - xmin, y - ymin, z);
             }
           }
         }
@@ -212,6 +227,35 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
     return;
   }
 
+  inputError.addZeros(zeroPadding, realInputError);
+  input.addZeros(zeroPadding, realInput);
+
+  for (int d = 0; d < depth; ++d) {
+    DataArray & filter = filters[d].first;
+
+    for (int xo = 0; xo < outputSize.w; ++xo) {
+      for (int yo = 0; yo < outputSize.h; ++yo) {
+        float err = error.at(xo, yo, d);
+        float dr = output.at(xo, yo, d);
+        float cf = err * (1 - dr) * dr;
+
+        int ymin = yo * stride;
+        int ymax = yo * stride + filterSize;
+
+        int xmin = xo * stride;
+        int xmax = xo * stride + filterSize;
+
+        for (int z = 0; z < inputSize.d; ++z) {
+          for (int y = ymin; y < ymax; ++y) {
+            for (int x = xmin; x < xmax; ++x) {
+              realInputError.at(x, y, z) += cf * filter.at(x - xmin, y - ymin, z);
+            }
+          }
+        }
+      }
+    }
+  }
+
   for (int d = 0; d < depth; ++d) {
     DataArray & filter = filters[d].first;
 
@@ -230,7 +274,7 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
             for (int x = xmin; x < xmax; ++x) {
-              filter.at(x - xmin, y - ymin, z) -= cf * input.at(x, y, z);
+              filter.at(x - xmin, y - ymin, z) -= cf * realInput.at(x, y, z);
             }
           }
         }
@@ -239,6 +283,8 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
       }
     }
   }
+
+  realInputError.removeFrame(zeroPadding, inputError);
 }
 
 
@@ -281,6 +327,35 @@ void MaxPoolLayer::backPropagate(const DataArray & input, const DataArray & outp
         }
 
         inputError.at(x + ddx, y + ddy, z) = error.at(x / filterSize, y / filterSize, z);
+      }
+    }
+  }
+}
+
+
+DataArray::Size ReluLayer::getInputSize() const {
+  return inputOutputSize;
+}
+
+DataArray::Size ReluLayer::getOutputSize() const {
+  return inputOutputSize;
+}
+
+void ReluLayer::propagate(const DataArray & input, DataArray & output) const {
+  for (int z = 0; z < inputOutputSize.d; ++z) {
+    for (int y = 0; y < inputOutputSize.h; ++y) {
+      for (int x = 0; x < inputOutputSize.w; ++x) {
+        output.at(x, y, z) = softPlusFunction(input.at(x, y, z));
+      }
+    }
+  }
+}
+
+void ReluLayer::backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda) {
+  for (int z = 0; z < inputOutputSize.d; ++z) {
+    for (int y = 0; y < inputOutputSize.h; ++y) {
+      for (int x = 0; x < inputOutputSize.w; ++x) {
+        inputError.at(x, y, z) = error.at(x, y, z) * errorderivativeSoftPlusFunction(input.at(x, y, z));
       }
     }
   }

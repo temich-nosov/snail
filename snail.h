@@ -8,6 +8,8 @@
 float func(float x);       /// Сигмоидальная функция
 float derivative(float x); /// И её производная
 
+float softPlusFunction(float x); /// Функция активации
+float derivativeSoftPlusFunction(float x); /// И её производная
 
 /**
  * Класс для хранения данных, подаваемых на вход сети,
@@ -125,7 +127,11 @@ public:
  * Класс свёрточного слоя
  */
 class ConvolutionalLayer : public Layer {
+  DataArray realInput;
+  DataArray realInputError;
+
   DataArray::Size inputSize;
+  DataArray::Size realInputSize;
   DataArray::Size outputSize;
 
   int depth;       /// Число фильтров в слое
@@ -183,6 +189,23 @@ class FullConnectedLayer : public ConvolutionalLayer {
 public:
   FullConnectedLayer();
   ~FullConnectedLayer();
+};
+
+/**
+ * Слой активации
+ */
+class ReluLayer : public Layer {
+  DataArray::Size inputOutputSize;
+public:
+  DataArray::Size getInputSize() const;
+  DataArray::Size getOutputSize() const;
+
+  ReluLayer(DataArray::Size size) : inputOutputSize(size) {}
+
+  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
+
+  ~ReluLayer() {}
 };
 
 class NeuralNetwork {
