@@ -119,7 +119,7 @@ void DataArray::addZeros(int width, DataArray & output) const {
   for (int z = 0; z < getSize().d; ++z) {
     for (int y = 0; y < getSize().h; ++y) {
       for (int x = 0; x < getSize().w; ++x) {
-        output.at(x + width, y + width, z) = at(z, y, z);
+        output.at(x + width, y + width, z) = at(x, y, z);
       }
     }
   }
@@ -174,12 +174,13 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int
 
   for (int i = 0; i < depth; ++i) {
     filters.push_back( std::pair<DataArray, float>(DataArray(filterSize, filterSize, inputSize.d), 0) );
-    filters.back().first.fillRnd();
+    // filters.back().first.fillRnd();
+    filters.back().first.clear();
   }
 }
 
 
-void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) const {
+void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) {
   if (input.getSize() != inputSize || output.getSize() != outputSize) {
     std::cerr << "Неправильные размеры входных или выходных данных" << std::endl;
     return;
@@ -240,15 +241,15 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         float cf = err * (1 - dr) * dr;
 
         int ymin = yo * stride;
-        int ymax = yo * stride + filterSize;
+        int ymax = ymin + filterSize;
 
         int xmin = xo * stride;
-        int xmax = xo * stride + filterSize;
+        int xmax = xmin + filterSize;
 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
             for (int x = xmin; x < xmax; ++x) {
-              realInputError.at(x, y, z) += cf * filter.at(x - xmin, y - ymin, z);
+              realInputError.at(x, y, z) -= cf * filter.at(x - xmin, y - ymin, z);
             }
           }
         }
@@ -265,6 +266,8 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         float dr = output.at(xo, yo, d);
         float cf = err * lambda * (1 - dr) * dr;
 
+        // std::cout << err << " " << dr << " " << cf << std::endl;
+
         int ymin = yo * stride;
         int ymax = yo * stride + filterSize;
 
@@ -274,6 +277,7 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
             for (int x = xmin; x < xmax; ++x) {
+              // if (z == 1 && y - ymin == 0 && x - xmin == 0) { std::cout << cf << " " << realInput.at(x, y, z) << std::endl; }
               filter.at(x - xmin, y - ymin, z) -= cf * realInput.at(x, y, z);
             }
           }
@@ -289,7 +293,7 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
 
 
 
-void MaxPoolLayer::propagate(const DataArray & input, DataArray & output) const {
+void MaxPoolLayer::propagate(const DataArray & input, DataArray & output) {
   output.clear();
   // TODO Прочекать размеры и так далее
   for (int z = 0; z < outputSize.d; ++z) {
@@ -341,7 +345,7 @@ DataArray::Size ReluLayer::getOutputSize() const {
   return inputOutputSize;
 }
 
-void ReluLayer::propagate(const DataArray & input, DataArray & output) const {
+void ReluLayer::propagate(const DataArray & input, DataArray & output) {
   for (int z = 0; z < inputOutputSize.d; ++z) {
     for (int y = 0; y < inputOutputSize.h; ++y) {
       for (int x = 0; x < inputOutputSize.w; ++x) {
@@ -355,7 +359,7 @@ void ReluLayer::backPropagate(const DataArray & input, const DataArray & output,
   for (int z = 0; z < inputOutputSize.d; ++z) {
     for (int y = 0; y < inputOutputSize.h; ++y) {
       for (int x = 0; x < inputOutputSize.w; ++x) {
-        inputError.at(x, y, z) = error.at(x, y, z) * errorderivativeSoftPlusFunction(input.at(x, y, z));
+        inputError.at(x, y, z) = error.at(x, y, z) * derivativeSoftPlusFunction(input.at(x, y, z));
       }
     }
   }
@@ -365,19 +369,75 @@ bool NeuralNetwork::addLayer(Layer * layer) {
   if (!layers.empty() && layers.back()->getOutputSize() != layer->getInputSize())
     return false;
 
+  if (layers.empty()) {
+    data.push_back(DataArray(layer->getInputSize()));
+    data[0].clear();
+
+    error.push_back(DataArray(layer->getInputSize()));
+    error[0].clear();
+  }
+
+  data.push_back(DataArray(layer->getOutputSize()));
+  data.back().clear();
+
+  error.push_back(DataArray(layer->getOutputSize()));
+  error.back().clear();
+
   layers.push_back(layer);
+  
   return true;
 }
 
 /// Пропустить данные через сеть
-void NeuralNetwork::propagate(const DataArray & input, DataArray & output) const {
-  // TODO почекать размеры
+void NeuralNetwork::propagate(const DataArray & input, DataArray & output) {
+  if (layers.empty()) {
+    std::cerr << "Bad layers size" << std::endl;
+    return;
+  }
+
+  if (input.getSize() != layers[0]->getInputSize()) {
+    std::cerr << "Bad input size" << std::endl;
+    return;
+  }
+
+  if (output.getSize() != layers.back()->getOutputSize()) {
+    std::cerr << "Bad output size" << std::endl;
+    return;
+  }
+
+  data[0] = input;
+  for (int i = 0; i < layers.size(); ++i) {
+    layers[i]->propagate(data[i], data[i + 1]);
+  }
+
+  output = data.back();
 }
 
 /// Произвести итерацию обучения сети
 void NeuralNetwork::backPropagate(const DataArray & input, const DataArray & expectOutput, float lambda) {
-  // propagate(); // ...
-  // Тут что то вычисляем в зависимости от используемой функции ошибки
-  // Тут 
+  // TODO layers.size() != 0
   // TODO почекать размеры
+  propagate(input, error.back()); // ...
+  for (int z = 0; z < error.back().getSize().d; ++z) {
+    for (int y = 0; y < error.back().getSize().h; ++y) {
+      for (int x = 0; x < error.back().getSize().w; ++x) {
+        error.back().at(x, y, z) -= expectOutput.at(x, y, z);
+      }
+    }
+  }
+
+  // Тут что то вычисляем в зависимости от используемой функции ошибки
+  for (int i = layers.size() - 1; i >= 0; --i) {
+    error[i].clear();
+    layers[i]->backPropagate(data[i], data[i + 1], error[i + 1], error[i], lambda);
+  }
+}
+
+NeuralNetwork::NeuralNetwork() {
+}
+
+void swap( DataArray& a, DataArray& b ) {
+  // std::cerr << "YES!!!" << std::endl;
+  std::swap(a.arr, b.arr);
+  std::swap(a.size, b.size);
 }

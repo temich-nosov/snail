@@ -92,7 +92,98 @@ void getMNIST(std::vector< std::pair<DataArray, int> > & base, std::string image
   delete labels;
 }
 
+int getVal(const DataArray & data) {
+  int res = 0;
+  for (int i = 0; i < 10; ++i) {
+    if (data.at(0, 0, i) > data.at(0, 0, res))
+      res = i;  
+  }
+
+  return res;
+}
+
+void genOut(int val, DataArray & data) {
+  for (int i = 0; i < 10; ++i)
+    data.at(0, 0, i) = ((i == val) ? 1.f : 0.f);
+}
+
+float check(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int> > & data, bool print) {
+  // DataArray output(1, 1, 10);
+  DataArray output(1, 1, 1);
+  int cnt = 0;
+  for (int i = 0; i < data.size(); ++i) {
+    neuralNetwork.propagate(data[i].first, output);
+    if (print)
+      std::cout << data[i].first.at(0, 0, 0) << " " << data[i].first.at(0, 0, 1) << " " << output.at(0, 0, 0) << std::endl;
+    if ((output.at(0, 0, 0) < 0.5) == (data[i].second == 0))
+      ++cnt;
+    // if (getVal(output) == data[i].second) {
+    //   ++cnt;
+      // std::cout << output.at(0, 0, 0) << " " << output.at(0, 0, 1) << std::endl;
+    // }
+  }
+
+  return float(cnt) / float(data.size());
+}
+
+
+void teach(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int> > & data) {
+  // DataArray output(1, 1, 10);
+  DataArray output(1, 1, 1);
+  std::random_shuffle(data.begin(), data.end());
+  for (int i = 0; i < data.size(); ++i) {
+    std::cout.flush();
+    output.at(0, 0, 0) = (data[i].second ? 1.f : 0.f);
+    // genOut(data[i].second, output);
+    neuralNetwork.backPropagate(data[i].first, output, 0.1);
+  }
+
+  // std::cout << std::endl;
+}
+
+void simpleTest() {
+  std::vector< std::pair<DataArray, int> > base;
+  base.assign(4, std::pair<DataArray, int>(DataArray(1, 1, 2), 0));
+  base[0].first.at(0, 0, 0) = 0;
+  base[0].first.at(0, 0, 1) = 0;
+  base[0].second = 0;
+
+  base[1].first.at(0, 0, 0) = 0;
+  base[1].first.at(0, 0, 1) = 1;
+  base[1].second = 1;
+
+  base[2].first.at(0, 0, 0) = 1;
+  base[2].first.at(0, 0, 1) = 0;
+  base[2].second = 1;
+
+  base[3].first.at(0, 0, 0) = 1;
+  base[3].first.at(0, 0, 1) = 1;
+  base[3].second = 1;
+
+  NeuralNetwork nn;
+  bool ok = true;
+
+  ConvolutionalLayer * l = new ConvolutionalLayer(DataArray::Size(1, 1, 2), 1, 1, 0, 1);
+  ok = ok && nn.addLayer(l);
+  std::cout << ok << std::endl;
+  l->filters[0].first.at(0, 0, 1) = 0.75;
+  for (int i = 0; i < 1000000; ++i) {
+    teach(nn, base);
+    float pc = check(nn, base, i % 10000 == 0);
+    if (i % 10000 == 0) {
+      std::cout << i << std::endl;
+      std::cout << pc << std::endl;
+      // std::cout << "Filters size : " << l->filters.size() << std::endl;
+      // std::cout << l->filters[0].first.at(0, 0, 0) << " " << l->filters[0].first.at(0, 0, 1) << " " << l->filters[0].second << std::endl;
+      // std::cout << l->filters[1].first.at(0, 0, 0) << " " << l->filters[1].second << std::endl;
+    }  
+  }
+}
+
 int main(int argc, char ** argv) {
+  simpleTest();
+  return 0;
+
   if (argc != 3) {
     std::cout << "Необходимо передать имя файла с базой MNIST в качестве параметра" << std::endl;
     return 0;
@@ -100,4 +191,34 @@ int main(int argc, char ** argv) {
 
   std::vector< std::pair<DataArray, int> > base;
   getMNIST(base, argv[1], argv[2]);
+  // std::random_shuffle(base.begin(), base.end());
+
+  base.resize(50);
+
+  NeuralNetwork nn;
+  bool ok = true;
+  /*
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 2, 1, 1, 3));
+  ok = ok && nn.addLayer(new ReluLayer(DataArray::Size(28, 28, 2)));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 2), 2, 2, 0, 2));
+  // ok = ok && nn.addLayer(new MaxPoolLayer(DataArray::Size(28, 28, 2), 2));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(14, 14, 2), 4, 1, 0, 3));
+  ok = ok && nn.addLayer(new ReluLayer(DataArray::Size(12, 12, 4)));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(12, 12, 4), 8, 2, 0, 2));
+  ok = ok && nn.addLayer(new ReluLayer(DataArray::Size(6, 6, 8)));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(6, 6, 8), 8, 2, 0, 2));
+  ok = ok && nn.addLayer(new ReluLayer(DataArray::Size(3, 3, 8)));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(3, 3, 8), 10, 3, 0, 3));
+  */
+
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 2, 6, 1, 6));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(5, 5, 2), 10, 5, 0, 5));
+  std::cout << ok << std::endl;
+  std::cout << std::string(60, '+') << std::endl;
+  for (int i = 0; i < 1000000; ++i) {
+    std::cout << i << std::endl;
+    teach(nn, base);
+    // float pc = check(nn, base);
+    // std::cout << pc << std::endl;
+  }
 }

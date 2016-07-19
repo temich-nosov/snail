@@ -95,7 +95,11 @@ public:
 
   /// Деструктор
   ~DataArray();
+
+  friend void swap( DataArray& a, DataArray& b );
 };
+
+void swap( DataArray& a, DataArray& b );
 
 /**
  * Абстрактный класс для слоя
@@ -110,7 +114,7 @@ public:
   virtual DataArray::Size getOutputSize() const = 0;
 
   /// Прямое распространение
-  virtual void propagate(const DataArray & input, DataArray & output) const = 0;
+  virtual void propagate(const DataArray & input, DataArray & output) = 0;
 
   /// Обратное распространение ошибки
   virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda) = 0;
@@ -127,6 +131,7 @@ public:
  * Класс свёрточного слоя
  */
 class ConvolutionalLayer : public Layer {
+public:
   DataArray realInput;
   DataArray realInputError;
 
@@ -141,7 +146,7 @@ class ConvolutionalLayer : public Layer {
 
   std::vector< std::pair<DataArray, float> > filters; // массив весов связей и смещение
 
-public:
+
   ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize);
   
   DataArray::Size getInputSize() const {
@@ -152,7 +157,7 @@ public:
     return outputSize;
   }
 
-  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void propagate(const DataArray & input, DataArray & output);
   virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
 
   ~ConvolutionalLayer() {};
@@ -176,7 +181,7 @@ public:
     outputSize.h /= filterSize;
   }
 
-  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void propagate(const DataArray & input, DataArray & output);
   virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
 
   ~MaxPoolLayer();
@@ -202,7 +207,7 @@ public:
 
   ReluLayer(DataArray::Size size) : inputOutputSize(size) {}
 
-  virtual void propagate(const DataArray & input, DataArray & output) const;
+  virtual void propagate(const DataArray & input, DataArray & output);
   virtual void backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda);
 
   ~ReluLayer() {}
@@ -211,6 +216,7 @@ public:
 class NeuralNetwork {
   std::vector<Layer *> layers;
   std::vector<DataArray> data;
+  std::vector<DataArray> error;
 public:
   NeuralNetwork();
   
@@ -227,7 +233,7 @@ public:
   bool addLayer(Layer * layer);
 
   /// Пропустить данные через сеть
-  void propagate(const DataArray & input, DataArray & output) const;
+  void propagate(const DataArray & input, DataArray & output);
 
   /// Произвести итерацию обучения сети
   void backPropagate(const DataArray & input, const DataArray & expectOutput, float lambda);
