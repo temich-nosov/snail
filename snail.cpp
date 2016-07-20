@@ -174,7 +174,7 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int
 
   for (int i = 0; i < depth; ++i) {
     filters.push_back( std::pair<DataArray, float>(DataArray(filterSize, filterSize, inputSize.d), 0) );
-    filters.back().first.fillRnd();
+    filters.back().first.fillRnd(0, 0.01);
     // filters.back().first.clear();
   }
 }

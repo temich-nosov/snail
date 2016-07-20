@@ -96,7 +96,7 @@ void getMNIST(std::vector< std::pair<DataArray, int> > & base, std::string image
 
 int getVal(const DataArray & data) {
   int res = 0;
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 10; ++i) {
     if (data.at(0, 0, i) > data.at(0, 0, res))
       res = i;  
   }
@@ -105,13 +105,20 @@ int getVal(const DataArray & data) {
 }
 
 void genOut(int val, DataArray & data) {
-  for (int i = 0; i < 4; ++i)
+  for (int i = 0; i < 10; ++i)
     data.at(0, 0, i) = ((i == val) ? 1.f : 0.f);
 }
 
+void printOutput(DataArray & d) {
+  for (int i = 0; i < d.getSize().d; ++i)
+    std::cout << d.at(0, 0, i) << " ";
+  std::cout << std::endl;
+}
+
 float check(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int> > & data, bool print) {
-  DataArray output(1, 1, 4);
+  DataArray output(1, 1, 10);
   // DataArray output(1, 1, 1);
+  float tt = 0;
   int cnt = 0;
   for (int i = 0; i < data.size(); ++i) {
     neuralNetwork.propagate(data[i].first, output);
@@ -119,12 +126,16 @@ float check(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int
     //  std::cout << data[i].first.at(0, 0, 0) << " " << data[i].first.at(0, 0, 1) << " " << output.at(0, 0, 0) << std::endl;
     // if ((output.at(0, 0, 0) < 0.5) == (data[i].second == 0))
     //   ++cnt;
+    // printOutput(output);
+    // std::cout << data[i].second << " " << output.at(0, 0, data[i].second) << std::endl;
+    // tt += output.at(0, 0, data[i].second);
     if (getVal(output) == data[i].second) {
       ++cnt;
       // if (print) std::cout << output.at(0, 0, 0) << " " << output.at(0, 0, 1) << std::endl;
     }
   }
 
+  // return tt;
   return float(cnt) / float(data.size());
 }
 
@@ -142,14 +153,14 @@ float check2(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, in
 }
 
 void teach(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int> > & data) {
-  DataArray output(1, 1, 4);
+  DataArray output(1, 1, 10);
   // DataArray output(1, 1, 1);
   // std::random_shuffle(data.begin(), data.end());
   for (int i = 0; i < data.size(); ++i) {
     // std::cout.flush();
     // output.at(0, 0, 0) = (data[i].second ? 1.f : 0.f);
     genOut(data[i].second, output);
-    neuralNetwork.backPropagate(data[i].first, output, 0.9);
+    neuralNetwork.backPropagate(data[i].first, output, 0.01);
   }
 
   // std::cout << std::endl;
@@ -309,13 +320,15 @@ int main(int argc, char ** argv) {
     return 0;
   }
 
-  std::vector< std::pair<DataArray, int> > base2;
-  getMNIST(base2, argv[1], argv[2]);
+  std::vector< std::pair<DataArray, int> > base;
+  getMNIST(base, argv[1], argv[2]);
+  /*
   std::vector< std::pair<DataArray, int> > base;
   std::copy_if(base2.begin(), base2.end(), std::back_inserter(base),
       [](const std::pair<DataArray, int> & p) {
         return p.second <= 3;
       });
+      */
   std::random_shuffle(base.begin(), base.end());
   // simpleTest3(base);
   // return 0;
@@ -340,16 +353,18 @@ int main(int argc, char ** argv) {
   */
   
 
-  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 4, 28, 0, 28));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 2, 1, 0, 4));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(25, 25, 2), 4, 5, 0, 5));
+  ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(5, 5, 4), 10, 5, 0, 5));
   // ok = ok && nn.addLayer(new ConvolutionalLayer(DataArray::Size(5, 5, 2), 10, 5, 0, 5));
   std::cout << ok << std::endl;
   std::cout << std::string(60, '+') << std::endl;
   for (int i = 0; i < 1000000; ++i) {
-    teach(nn, base);
     float pc = check(nn, base, i % 1 == 0);
     if (i % 1 == 0) {
       std::cout << i << std::endl;
       std::cout << pc << std::endl;
     }
+    teach(nn, base);
   }
 }
