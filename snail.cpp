@@ -174,8 +174,8 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int
 
   for (int i = 0; i < depth; ++i) {
     filters.push_back( std::pair<DataArray, float>(DataArray(filterSize, filterSize, inputSize.d), 0) );
-    // filters.back().first.fillRnd();
-    filters.back().first.clear();
+    filters.back().first.fillRnd();
+    // filters.back().first.clear();
   }
 }
 
@@ -197,10 +197,10 @@ void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) 
         val = 0;
 
         int ymin = yo * stride;
-        int ymax = yo * stride + filterSize;
+        int ymax = ymin + filterSize;
 
         int xmin = xo * stride;
-        int xmax = xo * stride + filterSize;
+        int xmax = xmin + filterSize;
 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
@@ -249,7 +249,7 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         for (int z = 0; z < inputSize.d; ++z) {
           for (int y = ymin; y < ymax; ++y) {
             for (int x = xmin; x < xmax; ++x) {
-              realInputError.at(x, y, z) -= cf * filter.at(x - xmin, y - ymin, z);
+              realInputError.at(x, y, z) += cf * filter.at(x - xmin, y - ymin, z);
             }
           }
         }
