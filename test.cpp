@@ -83,10 +83,12 @@ void getMNIST(std::vector< std::pair<DataArray, int> > & base, std::string image
     base[i].first = data;
     base[i].second = labels[i];
 
+    /*
     if (i % 1000 == 0) {
       std::cout << (int)labels[i] << std::endl;
       printDigit(base[i].first);
     }
+    */
   }
 
   delete labels;
@@ -250,6 +252,50 @@ void simpleTest2() {
   }
 }
 
+DataArray resizeHalf(const DataArray & t) {
+  int w = t.getSize().w / 2;
+  int h = t.getSize().h / 2;
+  DataArray res(t.getSize().w / 2, t.getSize().h / 2, 1);
+  for (int i = 0; i < w; ++i) {
+    for (int j = 0; j < h; ++j) {
+      float c;
+      c  = t.at(i * 2, j * 2, 0);
+      c += t.at(i * 2 + 1, j * 2, 0);
+      c += t.at(i * 2, j * 2 + 1, 0);
+      c += t.at(i * 2 + 1, j * 2 + 1, 0);
+
+      res.at(i, j, 0) = c / 4;
+    }
+  }
+
+  return res;
+}
+
+void simpleTest3(const std::vector< std::pair<DataArray, int> > & base) {
+  std::vector< std::pair<DataArray, int> > base2;
+  std::copy_if(base.begin(), base.end(), std::back_inserter(base2),
+      [](const std::pair<DataArray, int> & p) {
+        return p.second <= 1;
+      });
+
+  std::cout << base2.size() << std::endl;
+  for (int i = 0; i < base2.size(); ++i)
+    base2[i].first = resizeHalf(base2[i].first);
+
+  NeuralNetwork nn;
+  bool ok = nn.addLayer(new ConvolutionalLayer(DataArray::Size(14, 14, 1), 1, 14, 0, 14));
+  std::cout << ok << std::endl;
+
+  for (int i = 0; i < 100000; ++i) {
+    float pc = check2(nn, base2, i % 100 == 0);
+    if (i % 100 == 0) {
+      std::cout << i << std::endl;
+      std::cout << pc << std::endl;
+    }
+    teach2(nn, base2);
+  }
+}
+
 int main(int argc, char ** argv) {
   // simpleTest2();
   // return 0;
@@ -264,6 +310,8 @@ int main(int argc, char ** argv) {
   std::vector< std::pair<DataArray, int> > base;
   getMNIST(base, argv[1], argv[2]);
   std::random_shuffle(base.begin(), base.end());
+  simpleTest3(base);
+  return 0;
 
   // base.resize(2);
 
