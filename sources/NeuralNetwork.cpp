@@ -63,7 +63,58 @@ void NeuralNetwork::backPropagate(const DataArray & input, const DataArray & exp
   }
 }
 
-NeuralNetwork::NeuralNetwork() {
+
+NeuralNetwork::NeuralNetwork() {}
+
+
+void NeuralNetwork::clear() {
   for (auto t : layers)
     delete t;
+  layers.clear();
+  data.clear();
+  error.clear();
+}
+
+
+NeuralNetwork::~NeuralNetwork() {
+  clear();
+}
+
+
+void NeuralNetwork::load(std::string filename) {
+  clear();
+  std::ifstream file(filename, std::ifstream::binary);
+  int cnt;
+  cnt = readInt(file);
+
+  for (int i = 0; i < cnt; ++i)
+    addLayer(readLayer(file));
+}
+
+
+void NeuralNetwork::save(std::string filename) const {
+  std::ofstream file(filename, std::ofstream::binary);
+  writeInt(file, layers.size());
+
+  for (const Layer* t : layers)
+    writeLayer(t, file);
+}
+
+
+Layer* NeuralNetwork::readLayer(std::istream & stream) {
+  Layer::LayerType layerType = static_cast<Layer::LayerType>(readInt(stream));
+  if (layerType == Layer::LayerType::CONVOLUTIONAL)
+    return ConvolutionalLayer::read(stream);
+  if (layerType == Layer::LayerType::MAX_POOL)
+    return MaxPoolLayer::read(stream);
+
+  // Временный костыль
+  throw "Unknown type of layer";
+  return 0;
+}
+
+void NeuralNetwork::writeLayer(const Layer* layer, std::ostream & stream) {
+  int type = layer->getType();
+  writeInt(stream, type);
+  layer->write(stream);
 }

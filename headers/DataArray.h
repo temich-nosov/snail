@@ -1,6 +1,8 @@
 #ifndef DATAARRAY_H
 #define DATAARRAY_H
 
+#include "FileTools.h"
+
 #include <algorithm>
 #include <iostream>
 
@@ -41,6 +43,9 @@ public:
     int elemCnt() const {
       return w * h * d;
     }
+
+    void write(std::ostream & stream) const;
+    static DataArray::Size read(std::istream & stream);
   };
 
 private:
@@ -92,6 +97,9 @@ public:
   ~DataArray();
 
   friend void swap( DataArray& a, DataArray& b );
+
+  void write(std::ostream & stream) const;
+  static DataArray read(std::istream & stream);
 };
 
 void swap( DataArray& a, DataArray& b );

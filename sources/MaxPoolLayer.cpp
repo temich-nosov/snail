@@ -78,3 +78,21 @@ DataArray::Size MaxPoolLayer::getInputSize() const {
 DataArray::Size MaxPoolLayer::getOutputSize() const {
   return outputSize;
 }
+
+
+void MaxPoolLayer::write(std::ostream & stream) const {
+  inputSize.write(stream);
+  writeInt(stream, filterSize);
+}
+
+
+MaxPoolLayer* MaxPoolLayer::read(std::istream & stream) {
+  DataArray::Size inputSize = DataArray::Size::read(stream);
+  int filterSize = readInt(stream);
+  return new MaxPoolLayer(inputSize, filterSize);
+}
+
+
+Layer::LayerType MaxPoolLayer::getType() const {
+  return Layer::LayerType::MAX_POOL;
+}

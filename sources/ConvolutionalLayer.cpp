@@ -10,6 +10,9 @@ DataArray::Size ConvolutionalLayer::getOutputSize() const {
 }
 
 
+ConvolutionalLayer::ConvolutionalLayer() {}
+
+
 ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize) :
   inputSize(inputSize), depth(depth), stride(stride), zeroPadding(zeroPadding), filterSize(filterSize) {
 
@@ -116,8 +119,6 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         float dr = output.at(xo, yo, d);
         float cf = err * lambda * (1 - dr) * dr;
 
-        // std::cout << err << " " << dr << " " << cf << std::endl;
-
         int ymin = yo * stride;
         int ymax = yo * stride + filterSize;
 
@@ -137,3 +138,61 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
   realInputError.removeFrame(zeroPadding, inputError);
 }
 
+
+void ConvolutionalLayer::write(std::ostream & stream) const {
+  inputSize.write(stream);
+  writeInt(stream, depth);
+  writeInt(stream, stride);
+  writeInt(stream, zeroPadding);
+  writeInt(stream, filterSize);
+
+  for (auto & f : filters) {
+    f.first.write(stream);
+    writeFloat(stream, f.second);
+  }
+}
+
+
+ConvolutionalLayer* ConvolutionalLayer::read(std::istream & stream) {
+  ConvolutionalLayer* res = new ConvolutionalLayer();
+
+  res->inputSize = DataArray::Size::read(stream);
+  std::cerr << res->inputSize.w << " " << res->inputSize.h << " " << res->inputSize.d << std::endl;
+  res->depth = readInt(stream);
+  res->stride = readInt(stream);
+  res->zeroPadding = readInt(stream);
+  res->filterSize = readInt(stream);
+
+  res->realInputSize = res->inputSize;
+
+  res->realInputSize.w += 2 * res->zeroPadding;
+  res->realInputSize.h += 2 * res->zeroPadding;
+
+  res->realInput = DataArray(res->realInputSize);
+  res->realInputError = DataArray(res->realInputSize);
+
+  int inW = res->realInputSize.w - res->filterSize;
+  int inH = res->realInputSize.h - res->filterSize;
+
+
+  if (inW < 0 || inW % res->stride != 0) throw std::invalid_argument("ConvolutionalLayer::ConvolutionalLayer() wrong input width");
+  if (inH < 0 || inH % res->stride != 0) throw std::invalid_argument("ConvolutionalLayer::ConvolutionalLayer() wrong input height");
+
+  res->outputSize.w = inW / res->stride + 1;
+  res->outputSize.h = inH / res->stride + 1;
+  res->outputSize.d = res->depth;
+  res->filters.resize(res->depth);
+
+  for (int i = 0; i < res->depth; ++i) {
+    res->filters[i].first = DataArray::read(stream);
+    res->filters[i].second = readFloat(stream);
+    // res->filters.push_back(std::pair<DataArray, float>(DataArray::read(stream), readFloat(stream)));
+  }
+
+  return res;
+}
+
+
+Layer::LayerType ConvolutionalLayer::getType() const {
+  return Layer::LayerType::CONVOLUTIONAL;
+}

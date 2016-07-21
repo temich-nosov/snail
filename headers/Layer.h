@@ -2,6 +2,7 @@
 #define LAYER_H
 
 #include "DataArray.h"
+#include "FileTools.h"
 
 /**
  * Абстрактный класс для слоя
@@ -27,6 +28,16 @@ public:
    * по ссылке на базовый класс объект наследованного класса
    */
   virtual ~Layer() {}
+
+  virtual void write(std::ostream & stream) const = 0;
+
+  enum LayerType {
+    CONVOLUTIONAL,
+    MAX_POOL,
+    FULL_CONNECTED
+  };
+
+  virtual LayerType getType() const = 0;
 };
 
 #endif

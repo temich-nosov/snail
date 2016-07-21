@@ -316,9 +316,10 @@ int main(int argc, char ** argv) {
   base.erase(base.end() - 100, base.end());
 
   NeuralNetwork nn;
-  nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 10, 28, 0, 28));
+  nn.load("neuralNetwork");
+  // nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 10, 28, 0, 28));
 
-  for (int i = 0; i < 1000000; ++i) {
+  for (int i = 0; i < 10; ++i) {
     float pc = check(nn, checkBase, i % 1 == 0);
     if (i % 1 == 0) {
       std::cout << i << std::endl;
@@ -326,4 +327,6 @@ int main(int argc, char ** argv) {
     }
     teach(nn, base);
   }
+
+  // nn.save("neuralNetwork");
 }

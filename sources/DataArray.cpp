@@ -16,6 +16,22 @@ bool DataArray::Size::operator!=(const Size & size) const {
 }
 
 
+DataArray::Size DataArray::Size::read(std::istream & stream) {
+  DataArray::Size size;
+  size.w = readInt(stream);
+  size.h = readInt(stream);
+  size.d = readInt(stream);
+  return size;
+}
+
+
+void DataArray::Size::write(std::ostream & stream) const {
+  writeInt(stream, w);
+  writeInt(stream, h);
+  writeInt(stream, d);
+}
+
+
 DataArray::DataArray() {
   arr = 0;
 }
@@ -124,6 +140,27 @@ void DataArray::removeFrame(int width, DataArray & output) const {
         output.at(x, y, z) = at(x + width, y + width, z);
 }
 
+
+DataArray DataArray::read(std::istream & stream) {
+  DataArray::Size size = DataArray::Size::read(stream);
+  DataArray res(size);
+
+  for (int z = 0; z < size.d; ++z)
+    for (int y = 0; y < size.h; ++y)
+      for (int x = 0; x < size.w; ++x)
+        res.at(x, y, z) = readFloat(stream);
+
+  return res;
+}
+
+void DataArray::write(std::ostream & stream) const {
+  size.write(stream);
+
+  for (int z = 0; z < size.d; ++z)
+    for (int y = 0; y < size.h; ++y)
+      for (int x = 0; x < size.w; ++x)
+        writeFloat(stream, at(x, y, z));
+}
 
 void swap( DataArray& a, DataArray& b ) {
   std::swap(a.arr, b.arr);
