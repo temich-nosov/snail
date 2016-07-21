@@ -24,8 +24,9 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int
   int inW = realInputSize.w - filterSize;
   int inH = realInputSize.h - filterSize;
 
-  if (inW < 0 || inW % stride != 0) std::cerr << "Неправильные параметры" << std::endl; // error
-  if (inH < 0 || inH % stride != 0) std::cerr << "Неправильные параметры" << std::endl; // error
+
+  if (inW < 0 || inW % stride != 0) throw std::invalid_argument("ConvolutionalLayer::ConvolutionalLayer() wrong input width");
+  if (inH < 0 || inH % stride != 0) throw std::invalid_argument("ConvolutionalLayer::ConvolutionalLayer() wrong input height");
 
   outputSize.w = inW / stride + 1;
   outputSize.h = inH / stride + 1;
@@ -34,16 +35,16 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth, int
   for (int i = 0; i < depth; ++i) {
     filters.push_back( std::pair<DataArray, float>(DataArray(filterSize, filterSize, inputSize.d), 0) );
     filters.back().first.fillRnd(0, 0.01);
-    // filters.back().first.clear();
   }
 }
 
 
 void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) {
-  if (input.getSize() != inputSize || output.getSize() != outputSize) {
-    std::cerr << "Неправильные размеры входных или выходных данных" << std::endl;
-    return;
-  }
+  if (input.getSize() != inputSize)
+    throw std::invalid_argument("ConvolutionalLayer::propagate() Wrong input size");
+
+  if (output.getSize() != outputSize)
+    throw std::invalid_argument("ConvolutionalLayer::propagate() Wrong output size");
   
   input.addZeros(zeroPadding, realInput);
 
@@ -61,13 +62,10 @@ void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) 
         int xmin = xo * stride;
         int xmax = xmin + filterSize;
 
-        for (int z = 0; z < inputSize.d; ++z) {
-          for (int y = ymin; y < ymax; ++y) {
-            for (int x = xmin; x < xmax; ++x) {
+        for (int z = 0; z < inputSize.d; ++z)
+          for (int y = ymin; y < ymax; ++y)
+            for (int x = xmin; x < xmax; ++x)
               val += realInput.at(x, y, z) * filter.at(x - xmin, y - ymin, z);
-            }
-          }
-        }
 
         val = func(val + filters[d].second);
       }
@@ -77,15 +75,11 @@ void ConvolutionalLayer::propagate(const DataArray & input, DataArray & output) 
 
 
 void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda) {
-  if (inputError.getSize() != getInputSize() || input.getSize() != getInputSize()) {
-    std::cerr << "Ошибка" << std::endl;
-    return;
-  }
+  if (inputError.getSize() != getInputSize() || input.getSize() != getInputSize())
+    throw std::invalid_argument("ConvolutionalLayer::propagate() Wrong input size");
 
-  if (error.getSize() != getOutputSize() || output.getSize() != getOutputSize()) {
-    std::cerr << "Ошибка" << std::endl;
-    return;
-  }
+  if (error.getSize() != getOutputSize() || output.getSize() != getOutputSize())
+    throw std::invalid_argument("ConvolutionalLayer::propagate() Wrong output size");
 
   inputError.addZeros(zeroPadding, realInputError);
   input.addZeros(zeroPadding, realInput);
@@ -105,13 +99,10 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         int xmin = xo * stride;
         int xmax = xmin + filterSize;
 
-        for (int z = 0; z < inputSize.d; ++z) {
-          for (int y = ymin; y < ymax; ++y) {
-            for (int x = xmin; x < xmax; ++x) {
+        for (int z = 0; z < inputSize.d; ++z)
+          for (int y = ymin; y < ymax; ++y)
+            for (int x = xmin; x < xmax; ++x)
               realInputError.at(x, y, z) += cf * filter.at(x - xmin, y - ymin, z);
-            }
-          }
-        }
       }
     }
   }
@@ -133,14 +124,10 @@ void ConvolutionalLayer::backPropagate(const DataArray & input, const DataArray 
         int xmin = xo * stride;
         int xmax = xo * stride + filterSize;
 
-        for (int z = 0; z < inputSize.d; ++z) {
-          for (int y = ymin; y < ymax; ++y) {
-            for (int x = xmin; x < xmax; ++x) {
-              // if (z == 1 && y - ymin == 0 && x - xmin == 0) { std::cout << cf << " " << realInput.at(x, y, z) << std::endl; }
+        for (int z = 0; z < inputSize.d; ++z)
+          for (int y = ymin; y < ymax; ++y)
+            for (int x = xmin; x < xmax; ++x)
               filter.at(x - xmin, y - ymin, z) -= cf * realInput.at(x, y, z);
-            }
-          }
-        }
 
         filters[d].second -= cf;
       }

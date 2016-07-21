@@ -2,18 +2,22 @@
 
 
 void MaxPoolLayer::propagate(const DataArray & input, DataArray & output) {
+  if (input.getSize() != inputSize)
+    throw std::invalid_argument("MaxPoolLayer::propagate() bad input size");
+
+  if (output.getSize() != outputSize)
+    throw std::invalid_argument("MaxPoolLayer::propagate() bad output size");
+
   output.clear();
-  // TODO Прочекать размеры и так далее
+
   for (int z = 0; z < outputSize.d; ++z) {
     for (int y = 0; y < outputSize.h; y += filterSize) {
       for (int x = 0; x < outputSize.w; x += filterSize) {
         float & res = output.at(x / filterSize, y / filterSize, z);
         res = input.at(x, y, z);
-        for (int dy = 0; dy < filterSize; ++dy) {
-          for (int dx = 0; dx < filterSize; ++dx) {
+        for (int dy = 0; dy < filterSize; ++dy)
+          for (int dx = 0; dx < filterSize; ++dx)
             res = std::max(res, input.at(x + dx, y + dy, z));
-          }
-        }
       }
     }
   }
@@ -21,8 +25,19 @@ void MaxPoolLayer::propagate(const DataArray & input, DataArray & output) {
 
 
 void MaxPoolLayer::backPropagate(const DataArray & input, const DataArray & output, const DataArray & error, DataArray & inputError, float lambda) {
+  if (input.getSize() != inputSize)
+    throw std::invalid_argument("MaxPoolLayer::backPropagate() bad input size");
+
+  if (output.getSize() != outputSize)
+    throw std::invalid_argument("MaxPoolLayer::backPropagate() bad output size");
+
+  if (inputError.getSize() != inputSize)
+    throw std::invalid_argument("MaxPoolLayer::backPropagate() bad inputError size");
+
+  if (error.getSize() != outputSize)
+    throw std::invalid_argument("MaxPoolLayer::backPropagate() bad error size");
+
   inputError.clear();
-  // TODO Прочекать размеры и так далее
   for (int z = 0; z < outputSize.d; ++z) {
     for (int y = 0; y < outputSize.h; y += filterSize) {
       for (int x = 0; x < outputSize.w; x += filterSize) {
@@ -46,6 +61,9 @@ void MaxPoolLayer::backPropagate(const DataArray & input, const DataArray & outp
 
 
 MaxPoolLayer::MaxPoolLayer(DataArray::Size inputSize, int filterSize) : inputSize(inputSize), filterSize(filterSize) {
+  if (inputSize.w % filterSize != 0 || inputSize.h % filterSize != 0)
+    throw std::invalid_argument("MaxPoolLayer::MaxPoolLayer() bad input size");
+
   outputSize = inputSize;
   outputSize.w /= filterSize;
   outputSize.h /= filterSize;

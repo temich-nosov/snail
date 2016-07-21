@@ -54,8 +54,6 @@ DataArray& DataArray::operator=(const DataArray & other) {
   }
 
   if (size != other.size) {
-    // Размеры не совпадают    
-    
     if (arr)
       delete[] arr;
 
@@ -114,26 +112,20 @@ void DataArray::removeFrame(int width, DataArray & output) const {
   newSize.w -= 2 * width;
   newSize.h -= 2 * width;
 
-  if (newSize.w <= 0 || newSize.h <= 0) {
-    std::cerr << "..." << std::endl;
-    return;
-  }
+  if (newSize.w <= 0 || newSize.h <= 0)
+    throw std::invalid_argument("DataArray::removeFrame() new size less or equal to zero");
 
   if (newSize != output.getSize())
     output = DataArray(newSize);
 
-  for (int z = 0; z < newSize.d; ++z) {
-    for (int y = 0; y < newSize.h; ++y) {
-      for (int x = 0; x < newSize.w; ++x) {
+  for (int z = 0; z < newSize.d; ++z)
+    for (int y = 0; y < newSize.h; ++y)
+      for (int x = 0; x < newSize.w; ++x)
         output.at(x, y, z) = at(x + width, y + width, z);
-      }
-    }
-  }
 }
 
 
 void swap( DataArray& a, DataArray& b ) {
-  // std::cerr << "YES!!!" << std::endl;
   std::swap(a.arr, b.arr);
   std::swap(a.size, b.size);
 }

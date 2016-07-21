@@ -3,7 +3,9 @@
 
 #include "DataArray.h"
 #include "Layer.h"
+
 #include <algorithm>
+#include <stdexcept>
  
 /**
  * Класс слоя объединения

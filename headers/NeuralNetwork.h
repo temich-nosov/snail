@@ -3,7 +3,9 @@
 
 #include "Layer.h"
 #include "DataArray.h"
+
 #include <iostream>
+#include <stdexcept>
 
 class NeuralNetwork {
   std::vector<Layer *> layers;
@@ -22,7 +24,7 @@ public:
   // bool save(std::string filename);
 
   /// Добавить слой в сеть
-  bool addLayer(Layer * layer);
+  void addLayer(Layer * layer);
 
   /// Пропустить данные через сеть
   void propagate(const DataArray & input, DataArray & output);

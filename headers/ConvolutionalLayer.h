@@ -8,6 +8,7 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <stdexcept>
 
 /**
  * Класс свёрточного слоя
