@@ -108,9 +108,8 @@ Layer* NeuralNetwork::readLayer(std::istream & stream) {
   if (layerType == Layer::LayerType::MAX_POOL)
     return MaxPoolLayer::read(stream);
 
-  // Временный костыль
-  throw "Unknown type of layer";
-  return 0;
+  // layerType == FULL_CONNECTED
+  return FullConnectedLayer::read(stream);
 }
 
 void NeuralNetwork::writeLayer(const Layer* layer, std::ostream & stream) {

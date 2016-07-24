@@ -117,25 +117,13 @@ void printOutput(DataArray & d) {
 
 float check(NeuralNetwork & neuralNetwork, std::vector< std::pair<DataArray, int> > & data, bool print) {
   DataArray output(1, 1, 10);
-  // DataArray output(1, 1, 1);
-  float tt = 0;
   int cnt = 0;
   for (int i = 0; i < data.size(); ++i) {
     neuralNetwork.propagate(data[i].first, output);
-    // if (print)
-    //  std::cout << data[i].first.at(0, 0, 0) << " " << data[i].first.at(0, 0, 1) << " " << output.at(0, 0, 0) << std::endl;
-    // if ((output.at(0, 0, 0) < 0.5) == (data[i].second == 0))
-    //   ++cnt;
-    // printOutput(output);
-    // std::cout << data[i].second << " " << output.at(0, 0, data[i].second) << std::endl;
-    // tt += output.at(0, 0, data[i].second);
-    if (getVal(output) == data[i].second) {
+    if (getVal(output) == data[i].second)
       ++cnt;
-      // if (print) std::cout << output.at(0, 0, 0) << " " << output.at(0, 0, 1) << std::endl;
-    }
   }
 
-  // return tt;
   return float(cnt) / float(data.size());
 }
 
@@ -310,23 +298,22 @@ int main(int argc, char ** argv) {
 
   std::random_shuffle(base.begin(), base.end());
   std::vector< std::pair<DataArray, int> > checkBase(100);
-  for (int i = 0; i < 100; ++i) {
+
+  for (int i = 0; i < 100; ++i)
     checkBase[i] = *(base.end() - i - 1);
-  }
   base.erase(base.end() - 100, base.end());
 
   NeuralNetwork nn;
   nn.load("neuralNetwork");
   // nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 10, 28, 0, 28));
+  // nn.addLayer(new FullConnectedLayer(DataArray::Size(28, 28, 1), 10));
 
-  for (int i = 0; i < 10; ++i) {
-    float pc = check(nn, checkBase, i % 1 == 0);
-    if (i % 1 == 0) {
-      std::cout << i << std::endl;
-      std::cout << pc << std::endl;
-    }
+  for (int i = 0; i < 2; ++i) {
+    float pc = check(nn, checkBase, true);
+    std::cout << i  << std::endl;
+    std::cout << pc << std::endl;
     teach(nn, base);
   }
 
-  // nn.save("neuralNetwork");
+  nn.save("neuralNetwork");
 }

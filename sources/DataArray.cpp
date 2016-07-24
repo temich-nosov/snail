@@ -153,6 +153,7 @@ DataArray DataArray::read(std::istream & stream) {
   return res;
 }
 
+
 void DataArray::write(std::ostream & stream) const {
   size.write(stream);
 
@@ -161,6 +162,7 @@ void DataArray::write(std::ostream & stream) const {
       for (int x = 0; x < size.w; ++x)
         writeFloat(stream, at(x, y, z));
 }
+
 
 void swap( DataArray& a, DataArray& b ) {
   std::swap(a.arr, b.arr);
