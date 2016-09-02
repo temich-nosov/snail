@@ -32,7 +32,7 @@ class ConvolutionalLayer : public Layer {
   ConvolutionalLayer();
 
 public:
-  ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize);
+  ConvolutionalLayer(DataArray::Size inputSize, int depth, int stride, int zeroPadding, int filterSize, float maxRnd);
 
   DataArray::Size getInputSize() const;
   DataArray::Size getOutputSize() const;

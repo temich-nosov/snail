@@ -8,7 +8,7 @@ ConvolutionalLayer::ConvolutionalLayer() {}
 
 ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth,
                                        int stride, int zeroPadding,
-                                       int filterSize)
+                                       int filterSize, float maxRnd)
     : inputSize(inputSize),
       depth(depth),
       stride(stride),
@@ -39,7 +39,7 @@ ConvolutionalLayer::ConvolutionalLayer(DataArray::Size inputSize, int depth,
   for (int i = 0; i < depth; ++i) {
     filters.push_back(std::pair<DataArray, float>(
         DataArray(filterSize, filterSize, inputSize.d), 0));
-    filters.back().first.fillRnd(0, 0.01);
+    filters.back().first.fillRnd(0, maxRnd);
   }
 }
 

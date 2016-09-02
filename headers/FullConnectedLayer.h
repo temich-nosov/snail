@@ -12,7 +12,7 @@ class FullConnectedLayer : public ConvolutionalLayer {
   typedef ConvolutionalLayer Base;
   FullConnectedLayer(const ConvolutionalLayer & c);
 public:
-  FullConnectedLayer(DataArray::Size inputSize, int depth);
+  FullConnectedLayer(DataArray::Size inputSize, int depth, float maxRnd);
   ~FullConnectedLayer() {}
 
   void write(std::ostream & stream) const;
