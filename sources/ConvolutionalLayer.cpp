@@ -1,5 +1,6 @@
 #include "ConvolutionalLayer.h"
 
+namespace snail {
 DataArray::Size ConvolutionalLayer::getInputSize() const { return inputSize; }
 
 DataArray::Size ConvolutionalLayer::getOutputSize() const { return outputSize; }
@@ -204,3 +205,4 @@ ConvolutionalLayer* ConvolutionalLayer::read(std::istream& stream) {
 Layer::LayerType ConvolutionalLayer::getType() const {
   return Layer::LayerType::CONVOLUTIONAL;
 }
+} // namespace snail

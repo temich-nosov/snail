@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 
+namespace snail {
 /**
  * Класс свёрточного слоя
  */
@@ -47,5 +48,6 @@ public:
 
   virtual Layer::LayerType getType() const;
 };
+} // namespace snail
 
 #endif

@@ -8,6 +8,7 @@
 
 #include <stdexcept>
 
+namespace snail {
 /**
  * Класс для хранения данных, подаваемых на вход сети,
  * или получающихся после прохождения какого либо её слоя
@@ -103,5 +104,6 @@ public:
 };
 
 void swap( DataArray& a, DataArray& b );
+} // namespace snail
 
 #endif

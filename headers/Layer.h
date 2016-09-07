@@ -4,6 +4,7 @@
 #include "DataArray.h"
 #include "FileTools.h"
 
+namespace snail {
 /**
  * Абстрактный класс для слоя
  * От этого класса наследованны все остальные слои
@@ -39,5 +40,6 @@ public:
 
   virtual LayerType getType() const = 0;
 };
+} // namespace snail
 
 #endif

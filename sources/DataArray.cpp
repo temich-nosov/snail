@@ -1,6 +1,7 @@
 #include "DataArray.h"
 
 
+namespace snail {
 bool DataArray::Size::check(int x, int y, int z) const {
   return (x >= 0 && x < w) && (y >= 0 && y < h) && (z >= 0 && z < d);
 }
@@ -168,3 +169,4 @@ void swap( DataArray& a, DataArray& b ) {
   std::swap(a.arr, b.arr);
   std::swap(a.size, b.size);
 }
+} // namespace snail

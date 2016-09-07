@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <stdexcept>
  
+namespace snail {
 /**
  * Класс слоя объединения
  */
@@ -32,5 +33,6 @@ public:
 
   virtual Layer::LayerType getType() const;
 };
+} // namespace snail
 
 #endif

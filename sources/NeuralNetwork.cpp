@@ -1,6 +1,7 @@
 #include "NeuralNetwork.h"
 
 
+namespace snail {
 void NeuralNetwork::addLayer(Layer * layer) {
   if (!layers.empty() && layers.back()->getOutputSize() != layer->getInputSize())
     throw std::invalid_argument("NeuralNetwork::addLayer() Input size of the new layer is not equal to the output size of the previous layer");
@@ -117,3 +118,4 @@ void NeuralNetwork::writeLayer(const Layer* layer, std::ostream & stream) {
   writeInt(stream, type);
   layer->write(stream);
 }
+} // namespace snail

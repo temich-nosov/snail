@@ -1,5 +1,6 @@
 #include "FileTools.h"
 
+namespace snail {
 void writeInt(std::ostream & stream, int val) {
   stream.write((char *)&val, sizeof(int));
 }
@@ -22,3 +23,4 @@ float readFloat(std::istream & stream) {
   stream.read((char *)&res, sizeof(float));
   return res;
 }
+} // namespace snail

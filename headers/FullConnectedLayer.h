@@ -5,6 +5,7 @@
 #include "ConvolutionalLayer.h"
 #include "FileTools.h"
 
+namespace snail {
 /**
  * Полносвязный слой
  */
@@ -20,5 +21,6 @@ public:
 
   Layer::LayerType getType() const;
 };
+} // namespace snail
 
 #endif

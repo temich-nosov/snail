@@ -7,6 +7,11 @@
 
 #include "snail.h"
 
+using snail::NeuralNetwork;
+using snail::ConvolutionalLayer;
+using snail::FullConnectedLayer;
+using snail::DataArray;
+
 int readInt(std::ifstream & file) {
   int res;
   char* ptr = (char*)(&res);

@@ -1,6 +1,7 @@
 #include "MaxPoolLayer.h"
 
 
+namespace snail {
 void MaxPoolLayer::propagate(const DataArray & input, DataArray & output) {
   if (input.getSize() != inputSize)
     throw std::invalid_argument("MaxPoolLayer::propagate() bad input size");
@@ -96,3 +97,4 @@ MaxPoolLayer* MaxPoolLayer::read(std::istream & stream) {
 Layer::LayerType MaxPoolLayer::getType() const {
   return Layer::LayerType::MAX_POOL;
 }
+} // namespace snail

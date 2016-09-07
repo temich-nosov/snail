@@ -13,6 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 
+namespace snail {
 class NeuralNetwork {
   std::vector<Layer*> layers;
   std::vector<DataArray> data;
@@ -43,5 +44,6 @@ public:
 
   ~NeuralNetwork();
 };
+} // namespace snail
 
 #endif
