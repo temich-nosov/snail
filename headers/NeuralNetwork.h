@@ -1,5 +1,4 @@
-#ifndef NEURALNETWORK_H
-#define NEURALNETWORK_H
+#pragma once
 
 #include "Layer.h"
 
@@ -45,5 +44,3 @@ public:
   ~NeuralNetwork();
 };
 } // namespace snail
-
-#endif

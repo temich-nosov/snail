@@ -1,5 +1,4 @@
-#ifndef LAYER_H
-#define LAYER_H
+#pragma once
 
 #include "DataArray.h"
 #include "FileTools.h"
@@ -41,5 +40,3 @@ public:
   virtual LayerType getType() const = 0;
 };
 } // namespace snail
-
-#endif

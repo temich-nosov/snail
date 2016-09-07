@@ -1,5 +1,4 @@
-#ifndef CONVOLUTIONALLAYER_H
-#define CONVOLUTIONALLAYER_H
+#pragma once
 
 #include "DataArray.h"
 #include "Layer.h"
@@ -49,5 +48,3 @@ public:
   virtual Layer::LayerType getType() const;
 };
 } // namespace snail
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#pragma once
 
 #include <cmath>
 
@@ -10,5 +9,3 @@ float derivative(float x); /// И её производная
 float softPlusFunction(float x); /// Функция активации
 float derivativeSoftPlusFunction(float x); /// И её производная
 } // namespace snail
-
-#endif

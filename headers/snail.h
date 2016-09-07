@@ -1,5 +1,4 @@
-#ifndef SNAIL_H
-#define SHAIL_H
+#pragma once
 
 #include "functions.h"
 #include "DataArray.h"
@@ -8,5 +7,3 @@
 #include "ConvolutionalLayer.h"
 #include "FullConnectedLayer.h"
 #include "NeuralNetwork.h"
-
-#endif /* SHAIL_H */

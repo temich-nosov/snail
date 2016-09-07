@@ -1,5 +1,4 @@
-#ifndef DATAARRAY_H
-#define DATAARRAY_H
+#pragma once
 
 #include "FileTools.h"
 
@@ -105,5 +104,3 @@ public:
 
 void swap( DataArray& a, DataArray& b );
 } // namespace snail
-
-#endif

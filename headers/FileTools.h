@@ -1,5 +1,4 @@
-#ifndef FILETOOLS_H
-#define FILETOOLS_H
+#pragma once
 
 #include <fstream>
 
@@ -10,5 +9,3 @@ void writeFloat(std::ostream & stream, float val);
 int readInt(std::istream & stream);
 float readFloat(std::istream & stream);
 } // namespace snail
-
-#endif

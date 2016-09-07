@@ -1,5 +1,4 @@
-#ifndef FULLCONNECTEDLAYER_H
-#define FULLCONNECTEDLAYER_H
+#pragma once
 
 #include "DataArray.h"
 #include "ConvolutionalLayer.h"
@@ -22,5 +21,3 @@ public:
   Layer::LayerType getType() const;
 };
 } // namespace snail
-
-#endif

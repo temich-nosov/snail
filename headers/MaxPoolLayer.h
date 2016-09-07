@@ -1,5 +1,4 @@
-#ifndef MAXPOOLLAYER_H
-#define MAXPOOLLAYER_H
+#pragma once
 
 #include "DataArray.h"
 #include "Layer.h"
@@ -34,5 +33,3 @@ public:
   virtual Layer::LayerType getType() const;
 };
 } // namespace snail
-
-#endif
