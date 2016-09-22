@@ -1,4 +1,5 @@
 #include "DataArray.h"
+#include <random>
 
 
 namespace snail {
@@ -99,8 +100,15 @@ void DataArray::clear() {
 
 
 void DataArray::fillRnd(float minVal, float maxVal) {
-  std::generate_n(arr, size.elemCnt(), [minVal, maxVal] ()->float {
-    return minVal + rand()/(RAND_MAX / (maxVal-minVal));
+  std::default_random_engine generator;
+  // Печально, нужно генератор 1 глобальный сделать
+
+  float center = (minVal + maxVal) / 2;
+  float stddev = (maxVal - maxVal) / 6; // Используем правило 3х сигм
+
+  std::normal_distribution<float> distribution(center, stddev);
+  std::generate_n(arr, size.elemCnt(), [&] ()->float {
+    return distribution(generator);
   });
 }
 

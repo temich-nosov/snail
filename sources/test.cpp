@@ -10,6 +10,7 @@
 using snail::NeuralNetwork;
 using snail::ConvolutionalLayer;
 using snail::FullConnectedLayer;
+using snail::MaxPoolLayer;
 using snail::DataArray;
 
 int readInt(std::ifstream & file) {
@@ -155,7 +156,14 @@ int main(int argc, char ** argv) {
 
 
   NeuralNetwork nn;
-  nn.addLayer(new FullConnectedLayer(DataArray::Size(28, 28, 1), 10, 0.05));
+  nn.load("neuralNetwork");
+  /*
+  nn.addLayer(new ConvolutionalLayer(DataArray::Size(28, 28, 1), 3, 1, 0, 3, 1));
+  nn.addLayer(new MaxPoolLayer(DataArray::Size(26, 26, 3), 2));
+  nn.addLayer(new ConvolutionalLayer(DataArray::Size(13, 13, 3), 6, 1, 0, 4, 1));
+  nn.addLayer(new MaxPoolLayer(DataArray::Size(10, 10, 6), 2));
+  nn.addLayer(new FullConnectedLayer(DataArray::Size(5, 5, 6), 10, 1));
+  */
 
   float learnStep = 1;
   for (int i = 0; i <= 30; ++i) {
